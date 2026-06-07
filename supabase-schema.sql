@@ -12,11 +12,6 @@ create table if not exists public.beverages (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
-alter table public.beverages
-  drop column if exists "uploaderId";
-
-alter table public.beverages enable row level security;
-
 drop policy if exists "Public beverages are viewable by everyone." on public.beverages;
 drop policy if exists "Users can insert their own beverages." on public.beverages;
 drop policy if exists "Users can update their own beverages." on public.beverages;
@@ -25,6 +20,11 @@ drop policy if exists "Anyone can view beverages." on public.beverages;
 drop policy if exists "Anyone can insert beverages." on public.beverages;
 drop policy if exists "Anyone can update beverages." on public.beverages;
 drop policy if exists "Anyone can delete beverages." on public.beverages;
+
+alter table public.beverages
+  drop column if exists "uploaderId";
+
+alter table public.beverages enable row level security;
 
 create policy "Anyone can view beverages."
   on public.beverages for select
