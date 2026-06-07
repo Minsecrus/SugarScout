@@ -4,10 +4,10 @@ import { BeverageForm } from './components/BeverageForm';
 import { BeverageList } from './components/BeverageList';
 import { InfoPanel } from './components/InfoPanel';
 import { Modal } from './components/Modal';
-import { RangeFilter } from './components/RangeFilter';
+import { RangeFilterPanel } from './components/RangeFilterPanel';
 import { Beverage } from './types';
 import { BeverageInsert, isSupabaseConfigured, supabase } from './lib/supabase';
-import { Plus, Search, Droplets, Globe, ArrowUpDown, Info } from 'lucide-react';
+import { Plus, Search, Droplets, Globe, ArrowUpDown, Info, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const CATEGORIES = ['All', 'Soda', 'Juice', 'Coffee', 'Tea', 'Energy Drink', 'Other'];
@@ -48,6 +48,7 @@ export default function App() {
   const [totalSugarMax, setTotalSugarMax] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -245,23 +246,41 @@ export default function App() {
                 />
               </div>
               
-              <div className="flex bg-zinc-900/80 rounded-full border border-white/10 text-sm overflow-hidden h-12">
-                <div className="flex items-center px-4 border-r border-white/10 text-zinc-300 font-medium">
-                  <ArrowUpDown size={16} className="mr-2" />
-                  {t('sort_by')}
-                </div>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent text-white px-4 py-3 outline-none cursor-pointer appearance-none flex-1 min-w-[150px]"
+              <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(true)}
+                  className={`h-12 rounded-full border px-4 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+                    hasRangeFilters
+                      ? 'border-cyan-500 bg-cyan-500 text-black'
+                      : 'border-white/10 bg-zinc-900/80 text-white hover:border-white/20 hover:bg-zinc-800'
+                  }`}
                 >
-                  <option value="name_asc" className="bg-zinc-900">{t('name_asc')}</option>
-                  <option value="name_desc" className="bg-zinc-900">{t('name_desc')}</option>
-                  <option value="sugar_asc" className="bg-zinc-900">{t('sugar_asc')}</option>
-                  <option value="sugar_desc" className="bg-zinc-900">{t('sugar_desc')}</option>
-                  <option value="volume_asc" className="bg-zinc-900">{t('volume_asc')}</option>
-                  <option value="volume_desc" className="bg-zinc-900">{t('volume_desc')}</option>
-                </select>
+                  <SlidersHorizontal size={16} />
+                  <span>{t('range_filters')}</span>
+                  {hasRangeFilters && (
+                    <span className="rounded-full bg-black/15 px-2 py-0.5 text-xs font-bold">{t('active_filter')}</span>
+                  )}
+                </button>
+
+                <div className="flex bg-zinc-900/80 rounded-full border border-white/10 text-sm overflow-hidden h-12">
+                  <div className="flex items-center px-4 border-r border-white/10 text-zinc-300 font-medium">
+                    <ArrowUpDown size={16} className="mr-2" />
+                    {t('sort_by')}
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent text-white px-4 py-3 outline-none cursor-pointer appearance-none flex-1 min-w-[150px]"
+                  >
+                    <option value="name_asc" className="bg-zinc-900">{t('name_asc')}</option>
+                    <option value="name_desc" className="bg-zinc-900">{t('name_desc')}</option>
+                    <option value="sugar_asc" className="bg-zinc-900">{t('sugar_asc')}</option>
+                    <option value="sugar_desc" className="bg-zinc-900">{t('sugar_desc')}</option>
+                    <option value="volume_asc" className="bg-zinc-900">{t('volume_asc')}</option>
+                    <option value="volume_desc" className="bg-zinc-900">{t('volume_desc')}</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -281,51 +300,6 @@ export default function App() {
               ))}
             </div>
 
-            <div className="rounded-2xl border border-white/5 bg-zinc-900/40 p-4 sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-sm font-bold text-white">{t('range_filters')}</h3>
-                {hasRangeFilters && (
-                  <button
-                    type="button"
-                    onClick={clearRangeFilters}
-                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
-                  >
-                    {t('clear_ranges')}
-                  </button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <RangeFilter
-                  label={t('filter_sugar')}
-                  minLabel={t('min')}
-                  maxLabel={t('max')}
-                  minValue={sugarMin}
-                  maxValue={sugarMax}
-                  onMinChange={setSugarMin}
-                  onMaxChange={setSugarMax}
-                  step="0.1"
-                />
-                <RangeFilter
-                  label={t('filter_volume')}
-                  minLabel={t('min')}
-                  maxLabel={t('max')}
-                  minValue={volumeMin}
-                  maxValue={volumeMax}
-                  onMinChange={setVolumeMin}
-                  onMaxChange={setVolumeMax}
-                />
-                <RangeFilter
-                  label={t('filter_total_sugar')}
-                  minLabel={t('min')}
-                  maxLabel={t('max')}
-                  minValue={totalSugarMin}
-                  maxValue={totalSugarMax}
-                  onMinChange={setTotalSugarMin}
-                  onMaxChange={setTotalSugarMax}
-                  step="0.1"
-                />
-              </div>
-            </div>
           </motion.div>
         </div>
 
@@ -368,6 +342,29 @@ export default function App() {
         {isInfoOpen && (
           <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsInfoOpen(false)}>
             <InfoPanel />
+          </Modal>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isFilterOpen && (
+          <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsFilterOpen(false)}>
+            <RangeFilterPanel
+              clearRangeFilters={clearRangeFilters}
+              hasRangeFilters={hasRangeFilters}
+              setSugarMax={setSugarMax}
+              setSugarMin={setSugarMin}
+              setTotalSugarMax={setTotalSugarMax}
+              setTotalSugarMin={setTotalSugarMin}
+              setVolumeMax={setVolumeMax}
+              setVolumeMin={setVolumeMin}
+              sugarMax={sugarMax}
+              sugarMin={sugarMin}
+              totalSugarMax={totalSugarMax}
+              totalSugarMin={totalSugarMin}
+              volumeMax={volumeMax}
+              volumeMin={volumeMin}
+              onDone={() => setIsFilterOpen(false)}
+            />
           </Modal>
         )}
       </AnimatePresence>
