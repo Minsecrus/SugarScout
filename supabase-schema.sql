@@ -38,7 +38,3 @@ create policy "Anyone can update beverages."
   on public.beverages for update
   using (true)
   with check (true);
-
-create policy "Anyone can delete beverages."
-  on public.beverages for delete
-  using (true);

@@ -4,10 +4,10 @@ import { BeverageForm } from './components/BeverageForm';
 import { BeverageList } from './components/BeverageList';
 import { InfoPanel } from './components/InfoPanel';
 import { Modal } from './components/Modal';
-import { RangeFilterPanel } from './components/RangeFilterPanel';
+import { QuickFilterKey, RangeFilterPanel } from './components/RangeFilterPanel';
 import { Beverage } from './types';
 import { BeverageInsert, isSupabaseConfigured, supabase } from './lib/supabase';
-import { Plus, Search, Droplets, Globe, ArrowUpDown, Info, SlidersHorizontal } from 'lucide-react';
+import { Download, Plus, Search, Droplets, Globe, ArrowUpDown, Info, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const CATEGORIES = ['All', 'Soda', 'Juice', 'Coffee', 'Tea', 'Energy Drink', 'Other'];
@@ -33,6 +33,11 @@ const isInsideRange = (value: number, min: string, max: string) => {
   return true;
 };
 
+const csvEscape = (value: string | number | undefined) => {
+  const text = String(value ?? '');
+  return `"${text.replace(/"/g, '""')}"`;
+};
+
 export default function App() {
   const { t, i18n } = useTranslation();
   const [beverages, setBeverages] = useState<Beverage[]>(INITIAL_DATA);
@@ -49,6 +54,7 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [editingBeverage, setEditingBeverage] = useState<Beverage | null>(null);
 
   useEffect(() => {
     if (!supabase) {
@@ -101,25 +107,31 @@ export default function App() {
     setIsFormOpen(false);
   };
 
-  const handleDeleteBeverage = async (id: string) => {
-    if (!window.confirm(t('confirm_delete'))) {
+  const handleUpdateBeverage = async (beverage: BeverageInsert) => {
+    if (!editingBeverage?.id) {
       return;
     }
 
-    if (supabase) {
-      const { error } = await supabase
-        .from('beverages')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error(error);
-        alert(t('delete_failed'));
-        return;
-      }
+    if (!supabase) {
+      setBeverages((prev) => prev.map((item) => item.id === editingBeverage.id ? { ...item, ...beverage } : item));
+      setEditingBeverage(null);
+      return;
     }
 
-    setBeverages((prev) => prev.filter((beverage) => beverage.id !== id));
+    const { data, error } = await supabase
+      .from('beverages')
+      .update(beverage)
+      .eq('id', editingBeverage.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      throw new Error(t('update_failed'));
+    }
+
+    setBeverages((prev) => prev.map((item) => item.id === editingBeverage.id ? data : item));
+    setEditingBeverage(null);
   };
 
   const toggleLanguage = () => {
@@ -135,7 +147,59 @@ export default function App() {
     setTotalSugarMax('');
   };
 
+  const applyQuickFilter = (filter: QuickFilterKey) => {
+    clearRangeFilters();
+
+    switch (filter) {
+      case 'zero':
+        setSugarMin('0');
+        setSugarMax('0');
+        break;
+      case 'low':
+        setTotalSugarMin('0');
+        setTotalSugarMax('12.5');
+        break;
+      case 'moderate':
+        setTotalSugarMin('12.5');
+        setTotalSugarMax('25');
+        break;
+      case 'high':
+        setTotalSugarMin('25');
+        break;
+      case 'large':
+        setVolumeMin('500');
+        break;
+    }
+  };
+
   const hasRangeFilters = Boolean(sugarMin || sugarMax || volumeMin || volumeMax || totalSugarMin || totalSugarMax);
+
+  const downloadCsv = () => {
+    const rows = filteredBeverages.map((beverage) => {
+      const totalSugar = ((beverage.sugarPer100ml / 100) * beverage.volume_ml).toFixed(1);
+      return [
+        beverage.id,
+        beverage.name,
+        beverage.brand,
+        beverage.type,
+        beverage.sugarPer100ml,
+        beverage.volume_ml,
+        totalSugar,
+        beverage.created_at,
+      ].map(csvEscape).join(',');
+    });
+    const csv = [
+      ['id', 'name', 'brand', 'type', 'sugar_per_100ml', 'volume_ml', 'total_sugar_g', 'created_at'].join(','),
+      ...rows,
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'sugarscout-beverages.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filteredBeverages = useMemo(() => {
     let result = beverages.filter(b => {
@@ -249,17 +313,27 @@ export default function App() {
               <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
                 <button
                   type="button"
+                  onClick={downloadCsv}
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-zinc-900/80 text-white transition-colors hover:border-white/20 hover:bg-zinc-800"
+                  aria-label={t('download_csv')}
+                  title={t('download_csv')}
+                >
+                  <Download size={16} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsFilterOpen(true)}
-                  className={`h-12 rounded-full border px-4 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+                  className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-colors ${
                     hasRangeFilters
                       ? 'border-cyan-500 bg-cyan-500 text-black'
                       : 'border-white/10 bg-zinc-900/80 text-white hover:border-white/20 hover:bg-zinc-800'
                   }`}
+                  aria-label={t('range_filters')}
+                  title={t('range_filters')}
                 >
                   <SlidersHorizontal size={16} />
-                  <span>{t('range_filters')}</span>
                   {hasRangeFilters && (
-                    <span className="rounded-full bg-black/15 px-2 py-0.5 text-xs font-bold">{t('active_filter')}</span>
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-black/60 ring-2 ring-cyan-500" />
                   )}
                 </button>
 
@@ -309,7 +383,7 @@ export default function App() {
               {t('loading_beverages')}
             </div>
           ) : (
-            <BeverageList beverages={filteredBeverages} onDelete={handleDeleteBeverage} />
+            <BeverageList beverages={filteredBeverages} onEdit={setEditingBeverage} />
           )}
         </div>
       </main>
@@ -339,6 +413,19 @@ export default function App() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {editingBeverage && (
+          <Modal closeLabel={t('close_modal')} onClose={() => setEditingBeverage(null)}>
+            <BeverageForm
+              initialValues={editingBeverage}
+              onAdded={handleUpdateBeverage}
+              submitLabel={t('save_changes')}
+              title={t('edit_beverage')}
+            />
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {isInfoOpen && (
           <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsInfoOpen(false)}>
             <InfoPanel />
@@ -349,6 +436,7 @@ export default function App() {
         {isFilterOpen && (
           <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsFilterOpen(false)}>
             <RangeFilterPanel
+              applyQuickFilter={applyQuickFilter}
               clearRangeFilters={clearRangeFilters}
               hasRangeFilters={hasRangeFilters}
               setSugarMax={setSugarMax}

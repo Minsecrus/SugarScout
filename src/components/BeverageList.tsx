@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Beverage } from '../types';
-import { Trash2, Wine, Coffee, CupSoda, Droplet } from 'lucide-react';
+import { Pencil, Wine, Coffee, CupSoda, Droplet } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const getTypeIcon = (type: string) => {
@@ -25,7 +25,7 @@ const getTypeColor = (type: string) => {
   }
 };
 
-export function BeverageList({ beverages, onDelete }: { beverages: Beverage[]; onDelete?: (id: string) => void }) {
+export function BeverageList({ beverages, onEdit }: { beverages: Beverage[]; onEdit?: (beverage: Beverage) => void }) {
   const { t } = useTranslation();
 
   if (beverages.length === 0) {
@@ -60,15 +60,15 @@ export function BeverageList({ beverages, onDelete }: { beverages: Beverage[]; o
                   {getTypeIcon(beverage.type)}
                   <span className="truncate">{t(`categories.${beverage.type}`, beverage.type).toUpperCase()}</span>
                 </div>
-                {beverage.id && onDelete && (
+                {onEdit && (
                   <button
                     type="button"
-                    onClick={() => onDelete(beverage.id!)}
-                    className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
-                    title={t('delete_entry')}
-                    aria-label={t('delete_entry')}
+                    onClick={() => onEdit(beverage)}
+                    className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-cyan-500/10 hover:text-cyan-300"
+                    title={t('edit_entry')}
+                    aria-label={t('edit_entry')}
                   >
-                    <Trash2 size={16} />
+                    <Pencil size={16} />
                   </button>
                 )}
               </div>

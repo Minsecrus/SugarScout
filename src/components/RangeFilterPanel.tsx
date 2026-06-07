@@ -3,6 +3,7 @@ import { RangeFilter } from './RangeFilter';
 
 type RangeFilterPanelProps = {
   clearRangeFilters: () => void;
+  applyQuickFilter: (filter: QuickFilterKey) => void;
   hasRangeFilters: boolean;
   setSugarMax: (value: string) => void;
   setSugarMin: (value: string) => void;
@@ -19,7 +20,12 @@ type RangeFilterPanelProps = {
   onDone: () => void;
 };
 
+export type QuickFilterKey = 'zero' | 'low' | 'moderate' | 'high' | 'large';
+
+const QUICK_FILTERS: QuickFilterKey[] = ['zero', 'low', 'moderate', 'high', 'large'];
+
 export function RangeFilterPanel({
+  applyQuickFilter,
   clearRangeFilters,
   hasRangeFilters,
   setSugarMax,
@@ -43,6 +49,22 @@ export function RangeFilterPanel({
       <div>
         <p className="text-zinc-400 text-xs uppercase tracking-[0.2em] font-bold mb-3">{t('filter_label')}</p>
         <h2 className="text-2xl font-bold text-white">{t('range_filters')}</h2>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">{t('quick_filters')}</p>
+        <div className="flex flex-wrap gap-2">
+          {QUICK_FILTERS.map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => applyQuickFilter(filter)}
+              className="rounded-full border border-white/10 bg-zinc-950/50 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-cyan-400/50 hover:text-white"
+            >
+              {t(`quick_filter_${filter}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">

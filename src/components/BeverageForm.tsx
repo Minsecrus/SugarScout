@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BeverageInsert } from '../lib/supabase';
 
-export function BeverageForm({ onAdded }: { onAdded: (beverage: BeverageInsert) => Promise<void> | void }) {
+type BeverageFormProps = {
+  initialValues?: BeverageInsert;
+  onAdded: (beverage: BeverageInsert) => Promise<void> | void;
+  submitLabel?: string;
+  title?: string;
+};
+
+const emptyFormData = {
+  name: '',
+  brand: '',
+  sugarPer100ml: '',
+  volume_ml: '',
+  type: 'Soda',
+};
+
+export function BeverageForm({ initialValues, onAdded, submitLabel, title }: BeverageFormProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    brand: '',
-    sugarPer100ml: '',
-    volume_ml: '',
-    type: 'Soda',
-  });
+  const [formData, setFormData] = useState(emptyFormData);
+
+  useEffect(() => {
+    if (!initialValues) {
+      setFormData(emptyFormData);
+      return;
+    }
+
+    setFormData({
+      name: initialValues.name,
+      brand: initialValues.brand,
+      sugarPer100ml: String(initialValues.sugarPer100ml),
+      volume_ml: String(initialValues.volume_ml),
+      type: initialValues.type,
+    });
+  }, [initialValues]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -28,7 +52,9 @@ export function BeverageForm({ onAdded }: { onAdded: (beverage: BeverageInsert) 
         volume_ml: parseInt(formData.volume_ml, 10),
         type: formData.type,
       });
-      setFormData({ name: '', brand: '', sugarPer100ml: '', volume_ml: '', type: 'Soda' });
+      if (!initialValues) {
+        setFormData(emptyFormData);
+      }
     } catch (error: any) {
       alert('Error adding beverage: ' + error.message);
       console.error(error);
@@ -39,7 +65,7 @@ export function BeverageForm({ onAdded }: { onAdded: (beverage: BeverageInsert) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-zinc-900/50 p-6 sm:p-8 rounded-2xl border border-white/5 shadow-sm">
-      <h2 className="text-zinc-400 text-xs uppercase tracking-[0.2em] font-bold mb-6">{t('track_new_beverage')}</h2>
+      <h2 className="text-zinc-400 text-xs uppercase tracking-[0.2em] font-bold mb-6">{title ?? t('track_new_beverage')}</h2>
       
       <div className="grid grid-cols-1 gap-5">
         <div>
@@ -75,7 +101,7 @@ export function BeverageForm({ onAdded }: { onAdded: (beverage: BeverageInsert) 
       
       <div className="pt-4">
         <button disabled={loading} type="submit" className="w-full bg-white text-black hover:bg-zinc-200 font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50">
-          {loading ? t('adding') : t('add_button')}
+          {loading ? t('saving') : (submitLabel ?? t('add_button'))}
         </button>
       </div>
     </form>
