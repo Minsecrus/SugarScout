@@ -2,9 +2,12 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BeverageForm } from './components/BeverageForm';
 import { BeverageList } from './components/BeverageList';
+import { InfoPanel } from './components/InfoPanel';
+import { Modal } from './components/Modal';
+import { RangeFilter } from './components/RangeFilter';
 import { Beverage } from './types';
 import { BeverageInsert, isSupabaseConfigured, supabase } from './lib/supabase';
-import { Plus, X, Search, Droplets, Globe, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Droplets, Globe, ArrowUpDown, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const CATEGORIES = ['All', 'Soda', 'Juice', 'Coffee', 'Tea', 'Energy Drink', 'Other'];
@@ -15,6 +18,21 @@ const INITIAL_DATA: Beverage[] = [
   { id: '3', name: 'Monster Energy', brand: 'Monster', sugarPer100ml: 11.0, volume_ml: 500, type: 'Energy Drink' }
 ];
 
+const isInsideRange = (value: number, min: string, max: string) => {
+  const minNumber = min === '' ? null : Number(min);
+  const maxNumber = max === '' ? null : Number(max);
+
+  if (minNumber !== null && value < minNumber) {
+    return false;
+  }
+
+  if (maxNumber !== null && value > maxNumber) {
+    return false;
+  }
+
+  return true;
+};
+
 export default function App() {
   const { t, i18n } = useTranslation();
   const [beverages, setBeverages] = useState<Beverage[]>(INITIAL_DATA);
@@ -22,7 +40,14 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('name_asc');
+  const [sugarMin, setSugarMin] = useState('');
+  const [sugarMax, setSugarMax] = useState('');
+  const [volumeMin, setVolumeMin] = useState('');
+  const [volumeMax, setVolumeMax] = useState('');
+  const [totalSugarMin, setTotalSugarMin] = useState('');
+  const [totalSugarMax, setTotalSugarMax] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -100,12 +125,28 @@ export default function App() {
     i18n.changeLanguage(i18n.language === 'zh' ? 'en' : 'zh');
   };
 
+  const clearRangeFilters = () => {
+    setSugarMin('');
+    setSugarMax('');
+    setVolumeMin('');
+    setVolumeMax('');
+    setTotalSugarMin('');
+    setTotalSugarMax('');
+  };
+
+  const hasRangeFilters = Boolean(sugarMin || sugarMax || volumeMin || volumeMax || totalSugarMin || totalSugarMax);
+
   const filteredBeverages = useMemo(() => {
     let result = beverages.filter(b => {
       const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             b.brand.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || b.type === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const totalSugar = (b.sugarPer100ml / 100) * b.volume_ml;
+      const matchesSugar = isInsideRange(b.sugarPer100ml, sugarMin, sugarMax);
+      const matchesVolume = isInsideRange(b.volume_ml, volumeMin, volumeMax);
+      const matchesTotalSugar = isInsideRange(totalSugar, totalSugarMin, totalSugarMax);
+
+      return matchesSearch && matchesCategory && matchesSugar && matchesVolume && matchesTotalSugar;
     });
 
     result.sort((a, b) => {
@@ -121,7 +162,18 @@ export default function App() {
     });
 
     return result;
-  }, [beverages, searchTerm, selectedCategory, sortBy]);
+  }, [
+    beverages,
+    searchTerm,
+    selectedCategory,
+    sortBy,
+    sugarMin,
+    sugarMax,
+    volumeMin,
+    volumeMax,
+    totalSugarMin,
+    totalSugarMax,
+  ]);
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#E4E4E7] font-sans flex flex-col selection:bg-cyan-500/30">
@@ -133,13 +185,22 @@ export default function App() {
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white">{t('title')}<span className="text-cyan-400 font-light">{t('subtitle')}</span></h1>
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <button 
               onClick={toggleLanguage}
               className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transition-all hover:border-white/20"
             >
               <Globe size={16} />
               <span>{i18n.language === 'zh' ? 'EN' : '中'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsInfoOpen(true)}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:border-white/20"
+              aria-label={t('open_info')}
+              title={t('open_info')}
+            >
+              <Info size={17} />
             </button>
           </div>
         </div>
@@ -219,6 +280,52 @@ export default function App() {
                 </button>
               ))}
             </div>
+
+            <div className="rounded-2xl border border-white/5 bg-zinc-900/40 p-4 sm:p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 className="text-sm font-bold text-white">{t('range_filters')}</h3>
+                {hasRangeFilters && (
+                  <button
+                    type="button"
+                    onClick={clearRangeFilters}
+                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+                  >
+                    {t('clear_ranges')}
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <RangeFilter
+                  label={t('filter_sugar')}
+                  minLabel={t('min')}
+                  maxLabel={t('max')}
+                  minValue={sugarMin}
+                  maxValue={sugarMax}
+                  onMinChange={setSugarMin}
+                  onMaxChange={setSugarMax}
+                  step="0.1"
+                />
+                <RangeFilter
+                  label={t('filter_volume')}
+                  minLabel={t('min')}
+                  maxLabel={t('max')}
+                  minValue={volumeMin}
+                  maxValue={volumeMax}
+                  onMinChange={setVolumeMin}
+                  onMaxChange={setVolumeMax}
+                />
+                <RangeFilter
+                  label={t('filter_total_sugar')}
+                  minLabel={t('min')}
+                  maxLabel={t('max')}
+                  minValue={totalSugarMin}
+                  maxValue={totalSugarMax}
+                  onMinChange={setTotalSugarMin}
+                  onMaxChange={setTotalSugarMax}
+                  step="0.1"
+                />
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -251,30 +358,17 @@ export default function App() {
       {/* Add Form Modal */}
       <AnimatePresence>
         {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setIsFormOpen(false)}
-            ></motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-zinc-900 border border-white/10 p-6 sm:p-8 rounded-3xl w-full max-w-xl relative shadow-2xl"
-            >
-              <button
-                onClick={() => setIsFormOpen(false)}
-                className="absolute top-6 right-6 text-zinc-400 hover:text-white transition-colors p-1 bg-white/5 rounded-full hover:bg-white/10"
-              >
-                <X size={20} />
-              </button>
-              <BeverageForm onAdded={handleAddBeverage} />
-            </motion.div>
-          </div>
+          <Modal closeLabel={t('close_modal')} onClose={() => setIsFormOpen(false)}>
+            <BeverageForm onAdded={handleAddBeverage} />
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isInfoOpen && (
+          <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsInfoOpen(false)}>
+            <InfoPanel />
+          </Modal>
         )}
       </AnimatePresence>
       {!isSupabaseConfigured && (
