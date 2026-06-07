@@ -1,0 +1,122 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+const resources = {
+  en: {
+    translation: {
+      "title": "SUGAR",
+      "subtitle": "SCOUT",
+      "hero_title": "Beverage Data Explorer",
+      "hero_desc": "Search, filter, and compare the sugar content across thousands of drinks in our community-driven database.",
+      "total_scanned": "Total Scanned",
+      "avg_sugar": "Avg Sugar / 100ml",
+      "max_sugar": "Max Sugar / 100ml",
+      "search_placeholder": "Search database...",
+      "add_beverage": "Add a new beverage",
+      "track_new_beverage": "Track New Beverage",
+      "beverage_name": "Beverage Name",
+      "brand": "Brand",
+      "sugar_g100ml": "Sugar (g/100ml)",
+      "volume_ml": "Volume (ml)",
+      "type": "Type",
+      "add_button": "Add Beverage",
+      "adding": "Adding...",
+      "loading_beverages": "Loading beverages...",
+      "load_failed": "Failed to load beverage data.",
+      "add_failed": "Failed to add beverage.",
+      "delete_failed": "Failed to delete beverage.",
+      "confirm_delete": "Delete this beverage?",
+      "supabase_not_configured": "Supabase is not configured. New entries are only stored in this browser session.",
+      "delete_entry": "Delete entry",
+      "total_in": "Total in {{volume}}ml",
+      "per_100ml": "Per 100ml",
+      "no_beverages": "No beverages found.",
+      "no_beverages_desc": "We couldn't find anything matching your criteria. Try adjusting your filters or add a new entry to the database.",
+      "daily_limit": "Daily Limit (25g)",
+      "sugar_cubes": "Sugar Cubes",
+      "zero": "Zero",
+      "high_sugar": "High",
+      "sort_by": "Sort By",
+      "name_asc": "Name (A-Z)",
+      "name_desc": "Name (Z-A)",
+      "sugar_asc": "Sugar (Low to High)",
+      "sugar_desc": "Sugar (High to Low)",
+      "volume_asc": "Volume (Low to High)",
+      "volume_desc": "Volume (High to Low)",
+      "categories": {
+        "All": "All",
+        "Soda": "Soda",
+        "Juice": "Juice",
+        "Coffee": "Coffee",
+        "Tea": "Tea",
+        "Energy Drink": "Energy Drink",
+        "Other": "Other"
+      }
+    }
+  },
+  zh: {
+    translation: {
+      "title": "糖分",
+      "subtitle": "侦探",
+      "hero_title": "饮料数据探索器",
+      "hero_desc": "在我们社区驱动的数据库中搜索、过滤和比较数千种饮料的含糖量。",
+      "total_scanned": "总记录数",
+      "avg_sugar": "平均糖分 / 100ml",
+      "max_sugar": "最大糖分 / 100ml",
+      "search_placeholder": "搜索数据库...",
+      "add_beverage": "添加新饮料",
+      "track_new_beverage": "记录新饮料",
+      "beverage_name": "饮料名称",
+      "brand": "品牌",
+      "sugar_g100ml": "糖分 (g/100ml)",
+      "volume_ml": "容量 (ml)",
+      "type": "类型",
+      "add_button": "添加饮料",
+      "adding": "添加中...",
+      "loading_beverages": "正在加载饮料...",
+      "load_failed": "饮料数据加载失败。",
+      "add_failed": "添加饮料失败。",
+      "delete_failed": "删除饮料失败。",
+      "confirm_delete": "确定删除这条饮料记录吗？",
+      "supabase_not_configured": "尚未配置 Supabase。新增记录只会保存在当前浏览器会话中。",
+      "delete_entry": "删除记录",
+      "total_in": "总计在 {{volume}}ml 中",
+      "per_100ml": "每100ml",
+      "no_beverages": "未找到饮料。",
+      "no_beverages_desc": "我们找不到任何符合您条件的饮料。请尝试调整过滤器或添加新条目。",
+      "daily_limit": "日均限额 (25g)",
+      "sugar_cubes": "方糖数",
+      "zero": "零糖",
+      "high_sugar": "高糖",
+      "sort_by": "排序方式",
+      "name_asc": "名称 (A-Z)",
+      "name_desc": "名称 (Z-A)",
+      "sugar_asc": "糖分 (从低到高)",
+      "sugar_desc": "糖分 (从高到低)",
+      "volume_asc": "容量 (从小到大)",
+      "volume_desc": "容量 (从大到小)",
+      "categories": {
+        "All": "全部",
+        "Soda": "汽水",
+        "Juice": "果汁",
+        "Coffee": "咖啡",
+        "Tea": "茶",
+        "Energy Drink": "能量饮料",
+        "Other": "其他"
+      }
+    }
+  }
+};
+
+i18n
+  .use(initReactI18next)
+  .init({
+    resources,
+    lng: "zh",
+    fallbackLng: "en",
+    interpolation: {
+      escapeValue: false
+    }
+  });
+
+export default i18n;

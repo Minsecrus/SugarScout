@@ -1,0 +1,5 @@
+{
+  "name": "Sugar Scout",
+  "description": "A collaborative tracker for beverage sugar content, featuring data visualizations and comparisons.",
+  "requestFramePermissions": []
+}
