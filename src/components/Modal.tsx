@@ -24,12 +24,12 @@ export function Modal({ children, closeLabel, maxWidthClass = 'max-w-xl', onClos
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className={`bg-zinc-900 border border-white/10 p-6 sm:p-8 rounded-3xl w-full ${maxWidthClass} relative shadow-2xl`}
+        className={`w-full rounded-3xl border border-white/10 bg-zinc-900 p-6 sm:p-8 ${maxWidthClass} relative shadow-2xl`}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-6 right-6 text-zinc-400 hover:text-white transition-colors p-1 bg-white/5 rounded-full hover:bg-white/10"
+          className="absolute top-6 right-6 rounded-full bg-white/5 p-1 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
           aria-label={closeLabel}
           title={closeLabel}
         >

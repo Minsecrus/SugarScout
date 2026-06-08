@@ -7,15 +7,45 @@ import { Modal } from './components/Modal';
 import { QuickFilterKey, RangeFilterPanel } from './components/RangeFilterPanel';
 import { Beverage } from './types';
 import { BeverageInsert, isSupabaseConfigured, supabase } from './lib/supabase';
-import { Download, Plus, Search, Droplets, Globe, ArrowUpDown, Info, SlidersHorizontal } from 'lucide-react';
+import {
+  Download,
+  Plus,
+  Search,
+  Droplets,
+  Globe,
+  ArrowUpDown,
+  Info,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const CATEGORIES = ['All', 'Soda', 'Juice', 'Coffee', 'Tea', 'Energy Drink', 'Other'];
 
 const INITIAL_DATA: Beverage[] = [
-  { id: '1', name: 'Original Cola', brand: 'Coca-Cola', sugarPer100ml: 10.6, volume_ml: 330, type: 'Soda' },
-  { id: '2', name: 'Fresh Orange Juice', brand: 'Tropicana', sugarPer100ml: 9.0, volume_ml: 250, type: 'Juice' },
-  { id: '3', name: 'Monster Energy', brand: 'Monster', sugarPer100ml: 11.0, volume_ml: 500, type: 'Energy Drink' }
+  {
+    id: '1',
+    name: 'Original Cola',
+    brand: 'Coca-Cola',
+    sugarPer100ml: 10.6,
+    volume_ml: 330,
+    type: 'Soda',
+  },
+  {
+    id: '2',
+    name: 'Fresh Orange Juice',
+    brand: 'Tropicana',
+    sugarPer100ml: 9.0,
+    volume_ml: 250,
+    type: 'Juice',
+  },
+  {
+    id: '3',
+    name: 'Monster Energy',
+    brand: 'Monster',
+    sugarPer100ml: 11.0,
+    volume_ml: 500,
+    type: 'Energy Drink',
+  },
 ];
 
 const isInsideRange = (value: number, min: string, max: string) => {
@@ -85,18 +115,14 @@ export default function App() {
     if (!supabase) {
       const newBeverage: Beverage = {
         ...beverage,
-        id: Math.random().toString(36).substring(7)
+        id: Math.random().toString(36).substring(7),
       };
       setBeverages((prev) => [newBeverage, ...prev]);
       setIsFormOpen(false);
       return;
     }
 
-    const { data, error } = await supabase
-      .from('beverages')
-      .insert(beverage)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('beverages').insert(beverage).select().single();
 
     if (error) {
       console.error(error);
@@ -113,7 +139,9 @@ export default function App() {
     }
 
     if (!supabase) {
-      setBeverages((prev) => prev.map((item) => item.id === editingBeverage.id ? { ...item, ...beverage } : item));
+      setBeverages((prev) =>
+        prev.map((item) => (item.id === editingBeverage.id ? { ...item, ...beverage } : item)),
+      );
       setEditingBeverage(null);
       return;
     }
@@ -130,7 +158,7 @@ export default function App() {
       throw new Error(t('update_failed'));
     }
 
-    setBeverages((prev) => prev.map((item) => item.id === editingBeverage.id ? data : item));
+    setBeverages((prev) => prev.map((item) => (item.id === editingBeverage.id ? data : item)));
     setEditingBeverage(null);
   };
 
@@ -172,7 +200,9 @@ export default function App() {
     }
   };
 
-  const hasRangeFilters = Boolean(sugarMin || sugarMax || volumeMin || volumeMax || totalSugarMin || totalSugarMax);
+  const hasRangeFilters = Boolean(
+    sugarMin || sugarMax || volumeMin || volumeMax || totalSugarMin || totalSugarMax,
+  );
 
   const downloadCsv = () => {
     const rows = filteredBeverages.map((beverage) => {
@@ -186,10 +216,21 @@ export default function App() {
         beverage.volume_ml,
         totalSugar,
         beverage.created_at,
-      ].map(csvEscape).join(',');
+      ]
+        .map(csvEscape)
+        .join(',');
     });
     const csv = [
-      ['id', 'name', 'brand', 'type', 'sugar_per_100ml', 'volume_ml', 'total_sugar_g', 'created_at'].join(','),
+      [
+        'id',
+        'name',
+        'brand',
+        'type',
+        'sugar_per_100ml',
+        'volume_ml',
+        'total_sugar_g',
+        'created_at',
+      ].join(','),
       ...rows,
     ].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -202,9 +243,10 @@ export default function App() {
   };
 
   const filteredBeverages = useMemo(() => {
-    let result = beverages.filter(b => {
-      const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            b.brand.toLowerCase().includes(searchTerm.toLowerCase());
+    let result = beverages.filter((b) => {
+      const matchesSearch =
+        b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.brand.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || b.type === selectedCategory;
       const totalSugar = (b.sugarPer100ml / 100) * b.volume_ml;
       const matchesSugar = isInsideRange(b.sugarPer100ml, sugarMin, sugarMax);
@@ -216,13 +258,20 @@ export default function App() {
 
     result.sort((a, b) => {
       switch (sortBy) {
-        case 'name_asc': return a.name.localeCompare(b.name);
-        case 'name_desc': return b.name.localeCompare(a.name);
-        case 'sugar_asc': return a.sugarPer100ml - b.sugarPer100ml;
-        case 'sugar_desc': return b.sugarPer100ml - a.sugarPer100ml;
-        case 'volume_asc': return a.volume_ml - b.volume_ml;
-        case 'volume_desc': return b.volume_ml - a.volume_ml;
-        default: return 0;
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        case 'sugar_asc':
+          return a.sugarPer100ml - b.sugarPer100ml;
+        case 'sugar_desc':
+          return b.sugarPer100ml - a.sugarPer100ml;
+        case 'volume_asc':
+          return a.volume_ml - b.volume_ml;
+        case 'volume_desc':
+          return b.volume_ml - a.volume_ml;
+        default:
+          return 0;
       }
     });
 
@@ -241,19 +290,22 @@ export default function App() {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-[#E4E4E7] font-sans flex flex-col selection:bg-cyan-500/30">
-      <header className="bg-[#0A0A0B]/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+    <div className="flex min-h-screen flex-col bg-[#0A0A0B] font-sans text-[#E4E4E7] selection:bg-cyan-500/30">
+      <header className="sticky top-0 z-30 border-b border-white/5 bg-[#0A0A0B]/80 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-8">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-cyan-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]">
               <Droplets size={16} className="text-black" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white">{t('title')}<span className="text-cyan-400 font-light">{t('subtitle')}</span></h1>
+            <h1 className="text-xl font-bold tracking-tight text-white">
+              {t('title')}
+              <span className="font-extrabold text-cyan-400">{t('subtitle')}</span>
+            </h1>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={toggleLanguage}
-              className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transition-all hover:border-white/20"
+              className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-800 px-4 py-2 text-sm font-semibold text-white transition-all hover:border-white/20 hover:bg-zinc-700"
             >
               <Globe size={16} />
               <span>{i18n.language === 'zh' ? 'EN' : '中'}</span>
@@ -261,7 +313,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsInfoOpen(true)}
-              className="bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:border-white/20"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-white transition-all hover:border-white/20 hover:bg-zinc-700"
               aria-label={t('open_info')}
               title={t('open_info')}
             >
@@ -271,50 +323,52 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto w-full px-4 sm:px-8 py-12 flex-1 flex flex-col">
-        
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-12 sm:px-8">
         {/* Hero Section */}
-        <div className="w-full mb-12">
-          <motion.h2 
+        <div className="mb-12 w-full">
+          <motion.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4"
+            className="mb-4 text-4xl font-bold tracking-tight text-white md:text-5xl"
           >
             {t('hero_title')}
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-zinc-300 mb-10 max-w-2xl"
+            className="mb-10 max-w-2xl text-lg text-zinc-300"
           >
             {t('hero_desc')}
           </motion.p>
 
           {/* Search & Filters */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="flex flex-col gap-6"
           >
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div className="relative w-full md:max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-                <input 
-                  type="text" 
+                <Search
+                  className="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400"
+                  size={18}
+                />
+                <input
+                  type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-full bg-zinc-900/80 text-[#E4E4E7] shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] pl-12 pr-6 py-3.5 border border-white/10 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none transition-all" 
-                  placeholder={t('search_placeholder')} 
+                  className="w-full rounded-full border border-white/10 bg-zinc-900/80 py-3.5 pr-6 pl-12 text-[#E4E4E7] shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] transition-all focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
+                  placeholder={t('search_placeholder')}
                 />
               </div>
-              
-              <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
+
+              <div className="flex w-full min-w-0 gap-3 md:w-auto md:shrink-0">
                 <button
                   type="button"
                   onClick={downloadCsv}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-zinc-900/80 text-white transition-colors hover:border-white/20 hover:bg-zinc-800"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-zinc-900/80 text-white transition-colors hover:border-white/20 hover:bg-zinc-800"
                   aria-label={t('download_csv')}
                   title={t('download_csv')}
                 >
@@ -323,7 +377,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsFilterOpen(true)}
-                  className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-colors ${
+                  className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors ${
                     hasRangeFilters
                       ? 'border-cyan-500 bg-cyan-500 text-black'
                       : 'border-white/10 bg-zinc-900/80 text-white hover:border-white/20 hover:bg-zinc-800'
@@ -333,47 +387,58 @@ export default function App() {
                 >
                   <SlidersHorizontal size={16} />
                   {hasRangeFilters && (
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-black/60 ring-2 ring-cyan-500" />
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-black/60 ring-2 ring-cyan-500" />
                   )}
                 </button>
 
-                <div className="flex bg-zinc-900/80 rounded-full border border-white/10 text-sm overflow-hidden h-12">
-                  <div className="flex items-center px-4 border-r border-white/10 text-zinc-300 font-medium">
-                    <ArrowUpDown size={16} className="mr-2" />
-                    {t('sort_by')}
+                <div className="flex h-12 min-w-0 flex-1 overflow-hidden rounded-full border border-white/10 bg-zinc-900/80 text-sm md:w-[300px] md:flex-none lg:w-[330px]">
+                  <div className="flex shrink-0 items-center border-r border-white/10 px-3 font-medium text-zinc-300 sm:px-4">
+                    <ArrowUpDown size={16} className="sm:mr-2" />
+                    <span className="hidden sm:inline">{t('sort_by')}</span>
                   </div>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent text-white px-4 py-3 outline-none cursor-pointer appearance-none flex-1 min-w-[150px]"
+                    className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent px-3 py-3 text-white outline-none sm:px-4 md:min-w-[190px]"
                   >
-                    <option value="name_asc" className="bg-zinc-900">{t('name_asc')}</option>
-                    <option value="name_desc" className="bg-zinc-900">{t('name_desc')}</option>
-                    <option value="sugar_asc" className="bg-zinc-900">{t('sugar_asc')}</option>
-                    <option value="sugar_desc" className="bg-zinc-900">{t('sugar_desc')}</option>
-                    <option value="volume_asc" className="bg-zinc-900">{t('volume_asc')}</option>
-                    <option value="volume_desc" className="bg-zinc-900">{t('volume_desc')}</option>
+                    <option value="name_asc" className="bg-zinc-900">
+                      {t('name_asc')}
+                    </option>
+                    <option value="name_desc" className="bg-zinc-900">
+                      {t('name_desc')}
+                    </option>
+                    <option value="sugar_asc" className="bg-zinc-900">
+                      {t('sugar_asc')}
+                    </option>
+                    <option value="sugar_desc" className="bg-zinc-900">
+                      {t('sugar_desc')}
+                    </option>
+                    <option value="volume_asc" className="bg-zinc-900">
+                      {t('volume_asc')}
+                    </option>
+                    <option value="volume_desc" className="bg-zinc-900">
+                      {t('volume_desc')}
+                    </option>
                   </select>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map(category => (
+              {CATEGORIES.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCategory === category 
-                      ? 'bg-cyan-500 text-black border border-cyan-500' 
-                      : 'bg-zinc-900/50 text-zinc-300 border border-white/5 hover:border-white/20'
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    selectedCategory === category
+                      ? 'border border-cyan-500 bg-cyan-500 text-black'
+                      : 'border border-white/5 bg-zinc-900/50 text-zinc-300 hover:border-white/20'
                   }`}
                 >
                   {t(`categories.${category}`, category)}
                 </button>
               ))}
             </div>
-
           </motion.div>
         </div>
 
@@ -396,7 +461,7 @@ export default function App() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsFormOpen(true)}
-          className="fixed bottom-8 right-8 bg-cyan-500 text-black w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.4)] z-40"
+          className="fixed right-8 bottom-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-cyan-500 text-black shadow-[0_0_30px_rgba(34,211,238,0.4)]"
           title={t('add_beverage')}
         >
           <Plus size={28} />
@@ -427,14 +492,22 @@ export default function App() {
 
       <AnimatePresence>
         {isInfoOpen && (
-          <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsInfoOpen(false)}>
+          <Modal
+            closeLabel={t('close_modal')}
+            maxWidthClass="max-w-lg"
+            onClose={() => setIsInfoOpen(false)}
+          >
             <InfoPanel />
           </Modal>
         )}
       </AnimatePresence>
       <AnimatePresence>
         {isFilterOpen && (
-          <Modal closeLabel={t('close_modal')} maxWidthClass="max-w-lg" onClose={() => setIsFilterOpen(false)}>
+          <Modal
+            closeLabel={t('close_modal')}
+            maxWidthClass="max-w-lg"
+            onClose={() => setIsFilterOpen(false)}
+          >
             <RangeFilterPanel
               applyQuickFilter={applyQuickFilter}
               clearRangeFilters={clearRangeFilters}

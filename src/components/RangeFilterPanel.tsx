@@ -47,12 +47,16 @@ export function RangeFilterPanel({
   return (
     <section className="space-y-6 pr-8">
       <div>
-        <p className="text-zinc-400 text-xs uppercase tracking-[0.2em] font-bold mb-3">{t('filter_label')}</p>
+        <p className="mb-3 text-xs font-bold tracking-[0.2em] text-zinc-400 uppercase">
+          {t('filter_label')}
+        </p>
         <h2 className="text-2xl font-bold text-white">{t('range_filters')}</h2>
       </div>
 
       <div>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">{t('quick_filters')}</p>
+        <p className="mb-2 text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
+          {t('quick_filters')}
+        </p>
         <div className="flex flex-wrap gap-2">
           {QUICK_FILTERS.map((filter) => (
             <button
